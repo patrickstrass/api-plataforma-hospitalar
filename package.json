@@ -1,0 +1,47 @@
+{
+  "name": "gestao-hospitalar",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Protótipo de gestão hospitalar: API Express, MongoDB e Angular",
+  "engines": { "node": ">=24.15.0" },
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "node --watch backend/src/server.js",
+    "frontend": "npm --prefix frontend start",
+    "build": "npm --prefix frontend run build",
+    "seed": "node backend/scripts/seed.js",
+    "test": "jest --runInBand",
+    "test:unit": "jest --runInBand --testPathPatterns=unit",
+    "test:integration": "jest --runInBand --testPathPatterns=integration",
+    "contract:check": "node scripts/check-contract.js",
+    "check": "npm run contract:check && npm test && npm run build"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.0.0",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.8.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-parser": "^12.1.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^10.3.0",
+    "supertest": "^7.1.4"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "roots": ["<rootDir>/backend/tests"],
+    "testTimeout": 60000,
+    "clearMocks": true,
+    "collectCoverageFrom": ["backend/src/**/*.js", "!backend/src/server.js"]
+  }
+}

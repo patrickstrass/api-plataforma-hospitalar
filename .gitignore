@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+.angular/
+.cache/
+.env
+.env.*
+!.env.example
+*.log
+*.pem
+service-account*.json
+test-results/
+playwright-report/

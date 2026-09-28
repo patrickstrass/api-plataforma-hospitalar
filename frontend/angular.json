@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "projects": {
+    "hospital": {
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": { "outputPath": "dist/hospital", "index": "src/index.html", "browser": "src/main.ts", "polyfills": ["zone.js"], "tsConfig": "tsconfig.app.json", "styles": ["src/styles.css"] }
+        },
+        "serve": { "builder": "@angular-devkit/build-angular:dev-server", "configurations": { "development": { "buildTarget": "hospital:build" } }, "defaultConfiguration": "development" }
+      }
+    }
+  },
+  "cli": {
+    "analytics": "b17f05d3-a9db-4c91-9fa2-8fa798d8d732"
+  }
+}

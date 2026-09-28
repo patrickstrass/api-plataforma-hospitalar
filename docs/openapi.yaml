@@ -1,0 +1,390 @@
+openapi: 3.0.3
+info:
+  title: API da Plataforma de Gestão Hospitalar
+  version: 1.0.0
+  description: API do MVP para gestão de usuários, pacientes, médicos, leitos, internações e agenda institucional.
+servers:
+  - url: http://localhost:3000
+tags:
+  - name: Autenticação
+  - name: Usuários
+  - name: Médicos
+  - name: Pacientes
+  - name: Leitos
+  - name: Internações
+  - name: Agendamentos
+  - name: Operação
+paths:
+  /health:
+    get:
+      tags: [Operação]
+      security: []
+      summary: Verifica se o processo está ativo
+      responses:
+        '200': { description: Processo ativo, content: { application/json: { schema: { $ref: '#/components/schemas/Health' } } } }
+  /ready:
+    get:
+      tags: [Operação]
+      security: []
+      summary: Verifica banco e configuração essencial
+      responses:
+        '200': { description: Serviço pronto, content: { application/json: { schema: { $ref: '#/components/schemas/Health' } } } }
+        '503': { $ref: '#/components/responses/ServicoIndisponivel' }
+  /api/v1/auth/login:
+    post:
+      tags: [Autenticação]
+      security: []
+      summary: Autentica um funcionário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginInput' }
+            example: { email: admin@hospital.test, senha: senha-forte }
+      responses:
+        '200': { description: Autenticado, content: { application/json: { schema: { $ref: '#/components/schemas/Login' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+  /api/v1/usuarios/me:
+    get:
+      tags: [Usuários]
+      summary: Consulta o próprio perfil
+      responses:
+        '200': { description: Perfil, content: { application/json: { schema: { $ref: '#/components/schemas/Usuario' } } } }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+  /api/v1/usuarios:
+    get:
+      tags: [Usuários]
+      summary: Lista usuários (ADMIN)
+      parameters: [{ $ref: '#/components/parameters/Pagina' }, { $ref: '#/components/parameters/Limite' }, { $ref: '#/components/parameters/Ordem' }]
+      responses:
+        '200': { description: Página, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaUsuarios' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+    post:
+      tags: [Usuários]
+      summary: Cria usuário (ADMIN)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/UsuarioInput' } } } }
+      responses:
+        '201': { description: Criado, content: { application/json: { schema: { $ref: '#/components/schemas/Usuario' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+  /api/v1/usuarios/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Usuários]
+      summary: Detalha usuário (ADMIN)
+      responses:
+        '200': { description: Usuário, content: { application/json: { schema: { $ref: '#/components/schemas/Usuario' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+    patch:
+      tags: [Usuários]
+      summary: Atualiza usuário (ADMIN)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/UsuarioPatch' } } } }
+      responses:
+        '200': { description: Atualizado, content: { application/json: { schema: { $ref: '#/components/schemas/Usuario' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+  /api/v1/medicos:
+    get:
+      tags: [Médicos]
+      summary: Lista médicos
+      parameters: [{ $ref: '#/components/parameters/Pagina' }, { $ref: '#/components/parameters/Limite' }, { name: nome, in: query, schema: { type: string } }, { name: especialidade, in: query, schema: { type: string } }, { name: ativo, in: query, schema: { type: boolean } }]
+      responses:
+        '200': { description: Página, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaMedicos' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+    post:
+      tags: [Médicos]
+      summary: Cria médico (ADMIN)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MedicoInput' } } } }
+      responses:
+        '201': { description: Criado, content: { application/json: { schema: { $ref: '#/components/schemas/Medico' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+  /api/v1/medicos/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Médicos]
+      summary: Detalha médico
+      responses:
+        '200': { description: Médico, content: { application/json: { schema: { $ref: '#/components/schemas/Medico' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+    patch:
+      tags: [Médicos]
+      summary: Atualiza médico (ADMIN)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MedicoPatch' } } } }
+      responses:
+        '200': { description: Atualizado, content: { application/json: { schema: { $ref: '#/components/schemas/Medico' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+  /api/v1/pacientes:
+    get:
+      tags: [Pacientes]
+      summary: Lista pacientes
+      parameters: [{ $ref: '#/components/parameters/Pagina' }, { $ref: '#/components/parameters/Limite' }, { name: nome, in: query, schema: { type: string } }, { name: cpf, in: query, schema: { type: string, pattern: '^\d{11}$' } }, { name: ativo, in: query, schema: { type: boolean } }]
+      responses:
+        '200': { description: Página, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaPacientes' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+    post:
+      tags: [Pacientes]
+      summary: Cria paciente (ADMIN ou RECEPCAO)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/PacienteInput' } } } }
+      responses:
+        '201': { description: Criado, content: { application/json: { schema: { $ref: '#/components/schemas/Paciente' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+  /api/v1/pacientes/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Pacientes]
+      summary: Detalha paciente
+      responses:
+        '200': { description: Paciente, content: { application/json: { schema: { $ref: '#/components/schemas/Paciente' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+    patch:
+      tags: [Pacientes]
+      summary: Atualiza paciente (ADMIN ou RECEPCAO)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/PacientePatch' } } } }
+      responses:
+        '200': { description: Atualizado, content: { application/json: { schema: { $ref: '#/components/schemas/Paciente' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+  /api/v1/leitos:
+    get:
+      tags: [Leitos]
+      summary: Lista leitos
+      parameters: [{ $ref: '#/components/parameters/Pagina' }, { $ref: '#/components/parameters/Limite' }, { name: ocupado, in: query, schema: { type: boolean } }]
+      responses:
+        '200': { description: Página, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaLeitos' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+    post:
+      tags: [Leitos]
+      summary: Cria leito (ADMIN)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LeitoInput' } } } }
+      responses:
+        '201': { description: Criado, content: { application/json: { schema: { $ref: '#/components/schemas/Leito' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+  /api/v1/leitos/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Leitos]
+      summary: Detalha leito
+      responses:
+        '200': { description: Leito, content: { application/json: { schema: { $ref: '#/components/schemas/Leito' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+    patch:
+      tags: [Leitos]
+      summary: Atualiza código do leito (ADMIN)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LeitoInput' } } } }
+      responses:
+        '200': { description: Atualizado, content: { application/json: { schema: { $ref: '#/components/schemas/Leito' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+  /api/v1/internacoes:
+    get:
+      tags: [Internações]
+      summary: Lista internações; médicos veem apenas as próprias
+      parameters: [{ $ref: '#/components/parameters/Pagina' }, { $ref: '#/components/parameters/Limite' }, { name: pacienteId, in: query, schema: { $ref: '#/components/schemas/ObjectId' } }, { name: medicoId, in: query, schema: { $ref: '#/components/schemas/ObjectId' } }, { name: leitoId, in: query, schema: { $ref: '#/components/schemas/ObjectId' } }, { name: status, in: query, schema: { type: string, enum: [ATIVA, ENCERRADA, CANCELADA] } }, { name: dataInicio, in: query, schema: { type: string, format: date-time } }, { name: dataFim, in: query, schema: { type: string, format: date-time } }]
+      responses:
+        '200': { description: Página, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaInternacoes' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+    post:
+      tags: [Internações]
+      summary: Cria internação e ocupa o leito
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/InternacaoInput' } } } }
+      responses:
+        '201': { description: Criada, content: { application/json: { schema: { $ref: '#/components/schemas/Internacao' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+  /api/v1/internacoes/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Internações]
+      summary: Detalha internação
+      responses:
+        '200': { description: Internação, content: { application/json: { schema: { $ref: '#/components/schemas/Internacao' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+    patch:
+      tags: [Internações]
+      summary: Encerra ou cancela uma internação e libera o leito
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/InternacaoStatusInput' } } } }
+      responses:
+        '200': { description: Encerrada ou cancelada, content: { application/json: { schema: { $ref: '#/components/schemas/Internacao' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+  /api/v1/agendamentos:
+    get:
+      tags: [Agendamentos]
+      summary: Lista agendamentos; médicos veem apenas os próprios
+      parameters: [{ $ref: '#/components/parameters/Pagina' }, { $ref: '#/components/parameters/Limite' }, { name: pacienteId, in: query, schema: { $ref: '#/components/schemas/ObjectId' } }, { name: medicoId, in: query, schema: { $ref: '#/components/schemas/ObjectId' } }, { name: status, in: query, schema: { type: string, enum: [PENDENTE, CONFIRMADO, CANCELADO] } }, { name: inicio, in: query, schema: { type: string, format: date-time } }, { name: fim, in: query, schema: { type: string, format: date-time } }]
+      responses:
+        '200': { description: Página, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaAgendamentos' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+    post:
+      tags: [Agendamentos]
+      summary: Cria e sincroniza um agendamento
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/AgendamentoInput' } } } }
+      responses:
+        '201': { description: Confirmado, content: { application/json: { schema: { $ref: '#/components/schemas/AgendamentoView' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+        '502': { $ref: '#/components/responses/ProvedorFalhou' }
+        '503': { $ref: '#/components/responses/ServicoIndisponivel' }
+        '504': { $ref: '#/components/responses/ProvedorTimeout' }
+  /api/v1/agendamentos/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Agendamentos]
+      summary: Detalha agendamento
+      responses:
+        '200': { description: Agendamento, content: { application/json: { schema: { $ref: '#/components/schemas/AgendamentoView' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+    patch:
+      tags: [Agendamentos]
+      summary: Reagenda ou cancela
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/AgendamentoPatch' } } } }
+      responses:
+        '200': { description: Atualizado, content: { application/json: { schema: { $ref: '#/components/schemas/AgendamentoView' } } } }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '401': { $ref: '#/components/responses/NaoAutorizado' }
+        '403': { $ref: '#/components/responses/AcessoNegado' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflito' }
+        '502': { $ref: '#/components/responses/ProvedorFalhou' }
+        '503': { $ref: '#/components/responses/ServicoIndisponivel' }
+        '504': { $ref: '#/components/responses/ProvedorTimeout' }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+    Pagina: { name: pagina, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    Limite: { name: limite, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+    Ordem: { name: ordem, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string }, description: UUID recomendado; escopo por usuário e rota. }
+  responses:
+    RequisicaoInvalida: { description: Requisição inválida, headers: { X-Correlation-Id: { $ref: '#/components/headers/CorrelationId' } }, content: { application/json: { schema: { $ref: '#/components/schemas/Erro' } } } }
+    NaoAutorizado: { description: "Token ausente, inválido ou expirado", headers: { X-Correlation-Id: { $ref: '#/components/headers/CorrelationId' } }, content: { application/json: { schema: { $ref: '#/components/schemas/Erro' } } } }
+    AcessoNegado: { description: Papel sem permissão, headers: { X-Correlation-Id: { $ref: '#/components/headers/CorrelationId' } }, content: { application/json: { schema: { $ref: '#/components/schemas/Erro' } } } }
+    NaoEncontrado: { description: Recurso não encontrado, headers: { X-Correlation-Id: { $ref: '#/components/headers/CorrelationId' } }, content: { application/json: { schema: { $ref: '#/components/schemas/Erro' } } } }
+    Conflito: { description: "Duplicidade, indisponibilidade ou idempotência conflitante", headers: { X-Correlation-Id: { $ref: '#/components/headers/CorrelationId' } }, content: { application/json: { schema: { $ref: '#/components/schemas/Erro' } } } }
+    LimiteExcedido: { description: Limite de tentativas excedido, headers: { X-Correlation-Id: { $ref: '#/components/headers/CorrelationId' } }, content: { application/json: { schema: { $ref: '#/components/schemas/Erro' } } } }
+    ProvedorFalhou: { description: Provedor indisponível ou resposta inválida, headers: { X-Correlation-Id: { $ref: '#/components/headers/CorrelationId' } }, content: { application/json: { schema: { $ref: '#/components/schemas/Erro' } } } }
+    ServicoIndisponivel: { description: Serviço indisponível ou circuito aberto, headers: { X-Correlation-Id: { $ref: '#/components/headers/CorrelationId' } }, content: { application/json: { schema: { $ref: '#/components/schemas/Erro' } } } }
+    ProvedorTimeout: { description: Timeout no provedor, headers: { X-Correlation-Id: { $ref: '#/components/headers/CorrelationId' } }, content: { application/json: { schema: { $ref: '#/components/schemas/Erro' } } } }
+  headers:
+    CorrelationId: { schema: { type: string, format: uuid }, description: Identificador de rastreabilidade. }
+  schemas:
+    ObjectId: { type: string, pattern: '^[0-9a-fA-F]{24}$', example: 66f000000000000000000001 }
+    Papel: { type: string, enum: [ADMIN, RECEPCAO, MEDICO] }
+    Timestamps:
+      type: object
+      properties: { criadoEm: { type: string, format: date-time }, atualizadoEm: { type: string, format: date-time } }
+    LoginInput:
+      type: object
+      additionalProperties: false
+      required: [email, senha]
+      properties: { email: { type: string, format: email }, senha: { type: string, minLength: 8 } }
+    Login:
+      type: object
+      required: [accessToken, tokenType, expiresIn, usuario]
+      properties: { accessToken: { type: string }, tokenType: { type: string, enum: [Bearer] }, expiresIn: { type: integer, example: 1800 }, usuario: { type: object, required: [id, nome, papel], properties: { id: { $ref: '#/components/schemas/ObjectId' }, nome: { type: string }, papel: { $ref: '#/components/schemas/Papel' } } } }
+    Usuario:
+      allOf: [{ $ref: '#/components/schemas/Timestamps' }, { type: object, required: [id, nome, email, papel, ativo], properties: { id: { $ref: '#/components/schemas/ObjectId' }, nome: { type: string, minLength: 3, maxLength: 120 }, email: { type: string, format: email }, papel: { $ref: '#/components/schemas/Papel' }, medicoId: { nullable: true, allOf: [{ $ref: '#/components/schemas/ObjectId' }] }, ativo: { type: boolean } } }]
+    UsuarioInput:
+      type: object
+      additionalProperties: false
+      required: [nome, email, senha, papel]
+      properties: { nome: { type: string, minLength: 3, maxLength: 120 }, email: { type: string, format: email }, senha: { type: string, minLength: 8 }, papel: { $ref: '#/components/schemas/Papel' }, medicoId: { $ref: '#/components/schemas/ObjectId' }, ativo: { type: boolean, default: true } }
+    UsuarioPatch: { type: object, additionalProperties: false, minProperties: 1, properties: { nome: { type: string, minLength: 3, maxLength: 120 }, email: { type: string, format: email }, senha: { type: string, minLength: 8 }, papel: { $ref: '#/components/schemas/Papel' }, medicoId: { $ref: '#/components/schemas/ObjectId' }, ativo: { type: boolean } } }
+    Medico:
+      allOf: [{ $ref: '#/components/schemas/Timestamps' }, { type: object, required: [id, nome, crm, email, especialidade, ativo], properties: { id: { $ref: '#/components/schemas/ObjectId' }, nome: { type: string }, crm: { type: string, pattern: '^\d+$' }, email: { type: string, format: email }, especialidade: { type: string }, ativo: { type: boolean }, usuarioId: { nullable: true, allOf: [{ $ref: '#/components/schemas/ObjectId' }] } } }]
+    MedicoInput: { type: object, additionalProperties: false, required: [nome, crm, email], properties: { nome: { type: string, minLength: 3, maxLength: 120 }, crm: { type: string, pattern: '^\d+$' }, email: { type: string, format: email }, especialidade: { type: string } } }
+    MedicoPatch: { type: object, additionalProperties: false, minProperties: 1, properties: { nome: { type: string }, crm: { type: string, pattern: '^\d+$' }, email: { type: string, format: email }, especialidade: { type: string }, ativo: { type: boolean } } }
+    Paciente:
+      allOf: [{ $ref: '#/components/schemas/Timestamps' }, { type: object, required: [id, nome, cpf, email, ativo], properties: { id: { $ref: '#/components/schemas/ObjectId' }, nome: { type: string }, cpf: { type: string, pattern: '^\d{11}$' }, email: { type: string, format: email }, ativo: { type: boolean } } }]
+    PacienteInput: { type: object, additionalProperties: false, required: [nome, cpf, email], properties: { nome: { type: string, minLength: 3, maxLength: 120 }, cpf: { type: string, pattern: '^\d{11}$' }, email: { type: string, format: email } } }
+    PacientePatch: { type: object, additionalProperties: false, minProperties: 1, properties: { nome: { type: string }, cpf: { type: string, pattern: '^\d{11}$' }, email: { type: string, format: email }, ativo: { type: boolean } } }
+    Leito:
+      allOf: [{ $ref: '#/components/schemas/Timestamps' }, { type: object, required: [id, codigo, ocupado], properties: { id: { $ref: '#/components/schemas/ObjectId' }, codigo: { type: string }, ocupado: { type: boolean, readOnly: true } } }]
+    LeitoInput: { type: object, additionalProperties: false, required: [codigo], properties: { codigo: { type: string, minLength: 1 } } }
+    Internacao:
+      allOf: [{ $ref: '#/components/schemas/Timestamps' }, { type: object, required: [id, pacienteId, medicoResponsavelId, leitoId, dataEntrada, status, criadoPor], properties: { id: { $ref: '#/components/schemas/ObjectId' }, pacienteId: { $ref: '#/components/schemas/ObjectId' }, medicoResponsavelId: { $ref: '#/components/schemas/ObjectId' }, leitoId: { $ref: '#/components/schemas/ObjectId' }, dataEntrada: { type: string, format: date-time }, dataAlta: { type: string, format: date-time, nullable: true }, status: { type: string, enum: [ATIVA, ENCERRADA, CANCELADA] }, criadoPor: { $ref: '#/components/schemas/ObjectId' } } }]
+    InternacaoInput: { type: object, additionalProperties: false, required: [pacienteId, medicoResponsavelId, leitoId, dataEntrada], properties: { pacienteId: { $ref: '#/components/schemas/ObjectId' }, medicoResponsavelId: { $ref: '#/components/schemas/ObjectId' }, leitoId: { $ref: '#/components/schemas/ObjectId' }, dataEntrada: { type: string, format: date-time } } }
+    InternacaoStatusInput:
+      oneOf:
+        - { type: object, additionalProperties: false, required: [status, dataAlta], properties: { status: { type: string, enum: [ENCERRADA] }, dataAlta: { type: string, format: date-time } } }
+        - { type: object, additionalProperties: false, required: [status], properties: { status: { type: string, enum: [CANCELADA] } } }
+    AgendamentoInput: { type: object, additionalProperties: false, required: [pacienteId, medicoId, titulo, inicio, fim], properties: { pacienteId: { $ref: '#/components/schemas/ObjectId' }, medicoId: { $ref: '#/components/schemas/ObjectId' }, titulo: { type: string, maxLength: 160 }, descricao: { type: string, maxLength: 2000 }, inicio: { type: string, format: date-time }, fim: { type: string, format: date-time } } }
+    AgendamentoPatch: { type: object, additionalProperties: false, minProperties: 1, properties: { titulo: { type: string }, descricao: { type: string }, inicio: { type: string, format: date-time }, fim: { type: string, format: date-time }, status: { type: string, enum: [CANCELADO] } } }
+    AgendamentoView: { type: object, required: [id, paciente, medico, titulo, inicio, fim, status, calendarSincronizado, criadoEm], properties: { id: { $ref: '#/components/schemas/ObjectId' }, paciente: { type: object, properties: { id: { $ref: '#/components/schemas/ObjectId' }, nome: { type: string } } }, medico: { type: object, properties: { id: { $ref: '#/components/schemas/ObjectId' }, nome: { type: string }, especialidade: { type: string } } }, titulo: { type: string }, descricao: { type: string }, inicio: { type: string, format: date-time }, fim: { type: string, format: date-time }, status: { type: string, enum: [PENDENTE, CONFIRMADO, CANCELADO] }, calendarSincronizado: { type: boolean }, criadoEm: { type: string, format: date-time } } }
+    Paginacao: { type: object, required: [pagina, limite, totalItens, totalPaginas], properties: { pagina: { type: integer }, limite: { type: integer }, totalItens: { type: integer }, totalPaginas: { type: integer } } }
+    PaginaUsuarios: { type: object, properties: { dados: { type: array, items: { $ref: '#/components/schemas/Usuario' } }, paginacao: { $ref: '#/components/schemas/Paginacao' } } }
+    PaginaMedicos: { type: object, properties: { dados: { type: array, items: { $ref: '#/components/schemas/Medico' } }, paginacao: { $ref: '#/components/schemas/Paginacao' } } }
+    PaginaPacientes: { type: object, properties: { dados: { type: array, items: { $ref: '#/components/schemas/Paciente' } }, paginacao: { $ref: '#/components/schemas/Paginacao' } } }
+    PaginaLeitos: { type: object, properties: { dados: { type: array, items: { $ref: '#/components/schemas/Leito' } }, paginacao: { $ref: '#/components/schemas/Paginacao' } } }
+    PaginaInternacoes: { type: object, properties: { dados: { type: array, items: { $ref: '#/components/schemas/Internacao' } }, paginacao: { $ref: '#/components/schemas/Paginacao' } } }
+    PaginaAgendamentos: { type: object, properties: { dados: { type: array, items: { $ref: '#/components/schemas/AgendamentoView' } }, paginacao: { $ref: '#/components/schemas/Paginacao' } } }
+    DetalheErro: { type: object, required: [campo, motivo], properties: { campo: { type: string }, motivo: { type: string } } }
+    Erro: { type: object, required: [erro], properties: { erro: { type: object, required: [codigo, mensagem, detalhes, correlationId], properties: { codigo: { type: string }, mensagem: { type: string }, detalhes: { type: array, items: { $ref: '#/components/schemas/DetalheErro' } }, correlationId: { type: string, format: uuid } } } } }
+    Health: { type: object, required: [status], properties: { status: { type: string } } }
+security:
+  - bearerAuth: []
